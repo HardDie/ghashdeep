@@ -84,6 +84,11 @@ func (c Crawler) checkIterate(checkPath string) error {
 	}
 
 	for _, dir := range dirs {
+		if dir.Name() == ".git" {
+			// FIXME: remove
+			continue
+		}
+
 		if err = c.checkIterate(path.Join(checkPath, dir.Name())); err != nil {
 			return nil
 		}

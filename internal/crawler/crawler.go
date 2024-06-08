@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 )
 
 type HashMethod interface {
@@ -65,5 +66,13 @@ func (c Crawler) readFiles(checkPath string) ([]os.FileInfo, []os.FileInfo, erro
 		}
 		resFiles = append(resFiles, file)
 	}
+
+	sort.SliceStable(resFiles, func(i, j int) bool {
+		return resFiles[i].Name() < resFiles[j].Name()
+	})
+	sort.SliceStable(resDirs, func(i, j int) bool {
+		return resDirs[i].Name() < resDirs[j].Name()
+	})
+
 	return resFiles, resDirs, nil
 }
