@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -21,6 +22,19 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("All existing checksums will be replaced with new checksums.")
+		fmt.Println("Are you sure? [YES/NO]:")
+		fmt.Println()
+		var answer string
+		_, err := fmt.Scanf("%s", &answer)
+		if err != nil {
+			log.Fatalf("fmt.Scanf: %v", err)
+		}
+		if answer != "YES" {
+			fmt.Println("Operation has been declined!")
+			return
+		}
+
 		rootDir, err := os.Getwd()
 		if err != nil {
 			log.Fatalf("check os.Getwd: %v", err)
@@ -35,6 +49,8 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			log.Fatalf("calculate: %v", err.Error())
 		}
+
+		fmt.Println("All checksums has been calculated!")
 	},
 }
 
