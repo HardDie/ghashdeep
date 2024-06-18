@@ -3,11 +3,14 @@ package logger
 import (
 	"log/slog"
 	"os"
+
+	"github.com/lmittmann/tint"
 )
 
 const (
 	LogValueStatus     = "status"
 	LogValuePath       = "path"
+	LogValueFolder     = "folder"
 	LogValueFile       = "file"
 	LogValueStartedAt  = "started_at"
 	LogValueFinishedAt = "finished_at"
@@ -15,9 +18,9 @@ const (
 )
 
 var (
-	Logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		//AddSource: true,
-		Level: slog.LevelDebug,
+	Logger = slog.New(tint.NewHandler(os.Stdout, &tint.Options{
+		AddSource: true,
+		Level:     slog.LevelDebug,
 	}))
 	Debug = Logger.Debug
 	Info  = Logger.Info

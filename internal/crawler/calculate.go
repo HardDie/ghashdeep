@@ -4,9 +4,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"path"
+	"path/filepath"
+	"time"
 
+	"github.com/HardDie/LibraryHashCheck/internal/logger"
 	"github.com/HardDie/LibraryHashCheck/internal/utils"
 )
 
@@ -19,11 +23,15 @@ func (c Crawler) Calculate(checkPath string) error {
 }
 
 func (c Crawler) calculateIterate(checkPath string) error {
+	onlyPath := filepath.Dir(checkPath)
+	onlyDir := filepath.Base(checkPath)
+
 	files, dirs, err := c.readFiles(checkPath)
 	if err != nil {
 		return err
 	}
 
+	startedAt := time.Now()
 	info := make([]CheckFileInfo, 0, len(files))
 	for _, file := range files {
 		fileName := file.Name()
@@ -41,6 +49,7 @@ func (c Crawler) calculateIterate(checkPath string) error {
 			HashString: hex.EncodeToString(fileHash),
 		})
 	}
+	finishedAt := time.Now()
 
 	if len(info) > 0 {
 		checkFilePath := path.Join(checkPath, c.checkFileName)
@@ -48,6 +57,12 @@ func (c Crawler) calculateIterate(checkPath string) error {
 		if err != nil {
 			return fmt.Errorf("Crawler.calculateIterate(%s): %w", checkPath, err)
 		}
+		logger.Info(
+			"Calculated!",
+			slog.String(logger.LogValuePath, onlyPath),
+			slog.String(logger.LogValueFolder, onlyDir),
+			slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+		)
 	}
 
 	for _, dir := range dirs {

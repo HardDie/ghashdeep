@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -22,6 +23,9 @@ func (c Crawler) Check(checkPath string) error {
 }
 
 func (c Crawler) checkIterate(checkPath string) error {
+	onlyPath := filepath.Dir(checkPath)
+	onlyDir := filepath.Base(checkPath)
+
 	files, dirs, err := c.readFiles(checkPath)
 	if err != nil {
 		return err
@@ -79,9 +83,10 @@ func (c Crawler) checkIterate(checkPath string) error {
 				logger.Error(
 					"folder have errors",
 					slog.String(logger.LogValueStatus, "BAD"),
-					slog.String(logger.LogValuePath, checkPath),
-					slog.String(logger.LogValueStartedAt, startedAt.String()),
-					slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+					slog.String(logger.LogValuePath, onlyPath),
+					slog.String(logger.LogValueFolder, onlyDir),
+					//slog.String(logger.LogValueStartedAt, startedAt.String()),
+					//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
 					slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
 				)
 				for _, badFile := range notFound {
@@ -109,9 +114,10 @@ func (c Crawler) checkIterate(checkPath string) error {
 				logger.Info(
 					"Success",
 					slog.String(logger.LogValueStatus, "GOOD"),
-					slog.String(logger.LogValuePath, checkPath),
-					slog.String(logger.LogValueStartedAt, startedAt.String()),
-					slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+					slog.String(logger.LogValuePath, onlyPath),
+					slog.String(logger.LogValueFolder, onlyDir),
+					//slog.String(logger.LogValueStartedAt, startedAt.String()),
+					//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
 					slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
 				)
 			}
