@@ -1,12 +1,17 @@
 package cmd
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 
 	"github.com/HardDie/LibraryHashCheck/internal/crawler"
+	"github.com/HardDie/LibraryHashCheck/internal/logger"
 	"github.com/HardDie/LibraryHashCheck/internal/validators"
 )
 
@@ -21,19 +26,54 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootDir, err := os.Getwd()
-		if err != nil {
-			log.Fatalf("check os.Getwd: %v", err)
-		}
+		// listen app termination signals.
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
-		var hash crawler.HashMethod
-		hash = validators.NewMd5()
+		// init run group.
+		var g run.Group
 
-		err = crawler.
-			New(hash).
-			Check(rootDir)
-		if err != nil {
-			log.Fatalf("check: %v", err.Error())
+		// signal handler.
+		g.Add(func() error {
+			sig := <-signalChan
+			logger.Info(
+				"signal",
+				slog.String(logger.LogValueSignal, sig.String()),
+			)
+			return fmt.Errorf("interrupted by signal: %s", sig.String())
+		}, func(error) {
+			signal.Stop(signalChan)
+		})
+
+		g.Add(func() error {
+			rootDir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("check os.Getwd: %w", err)
+			}
+
+			var hash crawler.HashMethod
+			hash = validators.NewMd5()
+
+			err = crawler.
+				New(hash).
+				Check(rootDir)
+			if err != nil {
+				return fmt.Errorf("check: %w", err)
+			}
+			return nil
+		}, func(err error) {
+			os.Exit(0)
+		})
+
+		if err := g.Run(); err != nil {
+			logger.Info(
+				"application stopped due to",
+				slog.String("reason", err.Error()),
+			)
+		} else {
+			logger.Info(
+				"application stopped",
+			)
 		}
 	},
 }

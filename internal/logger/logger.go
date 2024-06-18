@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	LogValueSignal     = "signal"
 	LogValueStatus     = "status"
 	LogValuePath       = "path"
 	LogValueFolder     = "folder"
