@@ -4,9 +4,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"log/slog"
 	"path"
 	"strings"
+	"time"
 
+	"github.com/HardDie/LibraryHashCheck/internal/logger"
 	"github.com/HardDie/LibraryHashCheck/internal/utils"
 )
 
@@ -37,8 +40,13 @@ func (c Crawler) checkIterate(checkPath string) error {
 
 	if len(filesForCheck) > 0 {
 		if !isCheckFileExist {
-			log.Printf("[BAD] <dir> no checksum %q", checkPath)
+			logger.Error(
+				"no checksum",
+				slog.String(logger.LogValueStatus, "BAD"),
+				slog.String(logger.LogValuePath, checkPath),
+			)
 		} else {
+			startedAt := time.Now()
 			info, err := c.readCheckFile(path.Join(checkPath, c.checkFileName))
 			if err != nil {
 				log.Println("err", err.Error())
@@ -63,22 +71,49 @@ func (c Crawler) checkIterate(checkPath string) error {
 					badFiles = append(badFiles, fileName)
 				}
 			}
+			finishedAt := time.Now()
 
 			if len(badFiles) > 0 ||
 				len(notFound) > 0 ||
 				len(info) > 0 {
-				log.Printf("[BAD] %q", checkPath)
+				logger.Error(
+					"folder have errors",
+					slog.String(logger.LogValueStatus, "BAD"),
+					slog.String(logger.LogValuePath, checkPath),
+					slog.String(logger.LogValueStartedAt, startedAt.String()),
+					slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+					slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+				)
 				for _, badFile := range notFound {
-					log.Printf("--> <file> no checksum %q", badFile)
+					logger.Error(
+						"no checksum",
+						slog.String(logger.LogValueStatus, "BAD"),
+						slog.String(logger.LogValueFile, badFile),
+					)
 				}
 				for _, badFile := range badFiles {
-					log.Printf("--> <file> bad checksum %q", badFile)
+					logger.Error(
+						"bad checksum",
+						slog.String(logger.LogValueStatus, "BAD"),
+						slog.String(logger.LogValueFile, badFile),
+					)
 				}
 				for _, fileInfo := range info {
-					log.Printf("--> <file> not found %q", fileInfo.Name)
+					logger.Error(
+						"not found",
+						slog.String(logger.LogValueStatus, "BAD"),
+						slog.String(logger.LogValueFile, fileInfo.Name),
+					)
 				}
 			} else {
-				log.Printf("[GOOD] %q", checkPath)
+				logger.Info(
+					"Success",
+					slog.String(logger.LogValueStatus, "GOOD"),
+					slog.String(logger.LogValuePath, checkPath),
+					slog.String(logger.LogValueStartedAt, startedAt.String()),
+					slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+					slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+				)
 			}
 		}
 	}
