@@ -3,6 +3,8 @@ package validators
 import (
 	"bytes"
 	"crypto/md5"
+	"fmt"
+	"io"
 )
 
 type Md5Validator struct {
@@ -31,4 +33,14 @@ func (v Md5Validator) Hash(file []byte) []byte {
 func (v Md5Validator) Validate(file, hash []byte) bool {
 	fileHash := md5.Sum(file)
 	return bytes.Equal(fileHash[0:], hash)
+}
+
+func (v Md5Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
+	h := md5.New()
+	_, err := io.Copy(h, s)
+	if err != nil {
+		return false, fmt.Errorf("Md5Validator.ValidateStream() io.Copy: %w", err)
+	}
+	fileHash := h.Sum(nil)
+	return bytes.Equal(fileHash[0:], hash), nil
 }

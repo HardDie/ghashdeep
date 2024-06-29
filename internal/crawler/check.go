@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -12,6 +13,11 @@ import (
 
 	"github.com/HardDie/LibraryHashCheck/internal/logger"
 	"github.com/HardDie/LibraryHashCheck/internal/utils"
+)
+
+const (
+	Verbose      = false
+	IsStreamHash = true
 )
 
 func (c Crawler) Check(checkPath string) error {
@@ -60,19 +66,77 @@ func (c Crawler) checkIterate(checkPath string) error {
 			badFiles := make([]string, 0, len(filesForCheck))
 			notFound := make([]string, 0, len(filesForCheck))
 			for _, fileName := range filesForCheck {
-				fileData, err := utils.ReadAllFile(path.Join(checkPath, fileName))
-				if err != nil {
-					return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
-				}
-				fileInfo, ok := info[fileName]
-				if !ok {
-					notFound = append(notFound, fileName)
-					continue
-				}
-				// Exclude duplication
-				delete(info, fileName)
-				if !c.hash.Validate(fileData, fileInfo.Hash) {
-					badFiles = append(badFiles, fileName)
+				var readStart, readFinish time.Time
+				var hashStart, hashFinish time.Time
+				fullFilePath := path.Join(checkPath, fileName)
+				if IsStreamHash {
+					// open and calculate
+					fileInfo, ok := info[fileName]
+					if !ok {
+						notFound = append(notFound, fileName)
+						continue
+					}
+					// Exclude duplication
+					delete(info, fileName)
+
+					if Verbose {
+						hashStart = time.Now()
+					}
+					isValid, err := c.validateFile(fullFilePath, fileInfo.Hash)
+					if err != nil {
+						return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
+					}
+					if Verbose {
+						hashFinish = time.Now()
+						logger.Debug(
+							"stream hash calculation",
+							slog.String(logger.LogValueFile, fileName),
+							slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+						)
+					}
+					if !isValid {
+						badFiles = append(badFiles, fileName)
+					}
+				} else {
+					// read, copy and calculate
+					if Verbose {
+						readStart = time.Now()
+					}
+					fileData, err := utils.ReadAllFile(fullFilePath)
+					if err != nil {
+						return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
+					}
+					if Verbose {
+						readFinish = time.Now()
+						logger.Debug(
+							"file read",
+							slog.String(logger.LogValueFile, fileName),
+							slog.String(logger.LogValueDuration, readFinish.Sub(readStart).String()),
+						)
+					}
+
+					fileInfo, ok := info[fileName]
+					if !ok {
+						notFound = append(notFound, fileName)
+						continue
+					}
+					// Exclude duplication
+					delete(info, fileName)
+
+					if Verbose {
+						hashStart = time.Now()
+					}
+					if !c.hash.Validate(fileData, fileInfo.Hash) {
+						badFiles = append(badFiles, fileName)
+					}
+					if Verbose {
+						hashFinish = time.Now()
+						logger.Debug(
+							"hash calculation",
+							slog.String(logger.LogValueFile, fileName),
+							slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+						)
+					}
 				}
 			}
 			finishedAt := time.Now()
@@ -136,6 +200,24 @@ func (c Crawler) checkIterate(checkPath string) error {
 	}
 
 	return nil
+}
+func (c Crawler) validateFile(checkFilePath string, hash []byte) (bool, error) {
+	f, err := os.Open(checkFilePath)
+	if err != nil {
+		return false, fmt.Errorf("Crawler.validateFile(%s) os.Open: %w", checkFilePath, err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			log.Printf("Crawler.validateFile(%s) f.Close: %v", checkFilePath, e.Error())
+		}
+	}()
+
+	isValid, err := c.hash.ValidateStream(f, hash)
+	if err != nil {
+		return false, fmt.Errorf("Crawler.validateFile(%s) ValidateStream: %w", checkFilePath, err)
+	}
+
+	return isValid, nil
 }
 
 func (c Crawler) splitChecksumFileLine(line string) (CheckFileInfo, error) {

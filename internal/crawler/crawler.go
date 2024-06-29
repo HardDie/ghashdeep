@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"sort"
@@ -12,6 +13,7 @@ type HashMethod interface {
 	Len() int
 	Hash(file []byte) []byte
 	Validate(file, hash []byte) bool
+	ValidateStream(s io.Reader, hash []byte) (bool, error)
 }
 
 type CheckFileInfo struct {
