@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/HardDie/LibraryHashCheck/internal/logger"
@@ -112,6 +113,8 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	// Prepare lists for files with invalid checksums and not exist files
 	var badFiles, notFound []string
 
+	pr := utils.NewProcessing()
+
 	// Iterate through all files and compare checksum
 	for _, fileName := range filesForCheck {
 		// Check if file exist in checksum file
@@ -126,27 +129,36 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 		// Build full path to required file
 		fullFilePath := path.Join(checkPath, fileName)
 
-		// Track time calculation of hash sum for selected file
-		var hashStart, hashFinish time.Time
-		if Verbose {
-			hashStart = time.Now()
-		}
+		pr.Push(fileName, func(m *sync.Mutex) error {
+			// Track time calculation of hash sum for selected file
+			var hashStart, hashFinish time.Time
+			if Verbose {
+				hashStart = time.Now()
+			}
 
-		isValid, err := c.validateFile(fullFilePath, fileInfo.Hash)
-		if err != nil {
-			return fmt.Errorf("Crawler.checkIterateFiles: %w", err)
-		}
-		if Verbose {
-			hashFinish = time.Now()
-			logger.Debug(
-				"stream hash calculation",
-				slog.String(logger.LogValueFile, fileName),
-				slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
-			)
-		}
-		if !isValid {
-			badFiles = append(badFiles, fileName)
-		}
+			isValid, err := c.validateFile(fullFilePath, fileInfo.Hash)
+			if err != nil {
+				return fmt.Errorf("Crawler.checkIterateFiles: %w", err)
+			}
+			if Verbose {
+				hashFinish = time.Now()
+				logger.Debug(
+					"stream hash calculation",
+					slog.String(logger.LogValueFile, fileName),
+					slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+				)
+			}
+			if !isValid {
+				m.Lock()
+				badFiles = append(badFiles, fileName)
+				m.Unlock()
+			}
+			return nil
+		})
+	}
+	err = pr.Run()
+	if err != nil {
+		return fmt.Errorf("Crawler.checkIterateFiles() pr.Run: %w", err)
 	}
 	finishedAt := time.Now()
 
