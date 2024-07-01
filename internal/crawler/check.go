@@ -87,7 +87,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	onlyPath := filepath.Dir(checkPath)
 	onlyDir := filepath.Base(checkPath)
 
-	if len(filesForCheck) == 0 {
+	if len(filesForCheck) == 0 && !isCheckFileExist {
 		return nil
 	}
 
