@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	Verbose      = false
-	IsStreamHash = true
+	Verbose = false
 )
 
 func (c Crawler) Check(checkPath string) error {
@@ -66,77 +65,35 @@ func (c Crawler) checkIterate(checkPath string) error {
 			badFiles := make([]string, 0, len(filesForCheck))
 			notFound := make([]string, 0, len(filesForCheck))
 			for _, fileName := range filesForCheck {
-				var readStart, readFinish time.Time
 				var hashStart, hashFinish time.Time
 				fullFilePath := path.Join(checkPath, fileName)
-				if IsStreamHash {
-					// open and calculate
-					fileInfo, ok := info[fileName]
-					if !ok {
-						notFound = append(notFound, fileName)
-						continue
-					}
-					// Exclude duplication
-					delete(info, fileName)
 
-					if Verbose {
-						hashStart = time.Now()
-					}
-					isValid, err := c.validateFile(fullFilePath, fileInfo.Hash)
-					if err != nil {
-						return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
-					}
-					if Verbose {
-						hashFinish = time.Now()
-						logger.Debug(
-							"stream hash calculation",
-							slog.String(logger.LogValueFile, fileName),
-							slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
-						)
-					}
-					if !isValid {
-						badFiles = append(badFiles, fileName)
-					}
-				} else {
-					// read, copy and calculate
-					if Verbose {
-						readStart = time.Now()
-					}
-					fileData, err := utils.ReadAllFile(fullFilePath)
-					if err != nil {
-						return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
-					}
-					if Verbose {
-						readFinish = time.Now()
-						logger.Debug(
-							"file read",
-							slog.String(logger.LogValueFile, fileName),
-							slog.String(logger.LogValueDuration, readFinish.Sub(readStart).String()),
-						)
-					}
+				// open and calculate
+				fileInfo, ok := info[fileName]
+				if !ok {
+					notFound = append(notFound, fileName)
+					continue
+				}
+				// Exclude duplication
+				delete(info, fileName)
 
-					fileInfo, ok := info[fileName]
-					if !ok {
-						notFound = append(notFound, fileName)
-						continue
-					}
-					// Exclude duplication
-					delete(info, fileName)
-
-					if Verbose {
-						hashStart = time.Now()
-					}
-					if !c.hash.Validate(fileData, fileInfo.Hash) {
-						badFiles = append(badFiles, fileName)
-					}
-					if Verbose {
-						hashFinish = time.Now()
-						logger.Debug(
-							"hash calculation",
-							slog.String(logger.LogValueFile, fileName),
-							slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
-						)
-					}
+				if Verbose {
+					hashStart = time.Now()
+				}
+				isValid, err := c.validateFile(fullFilePath, fileInfo.Hash)
+				if err != nil {
+					return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
+				}
+				if Verbose {
+					hashFinish = time.Now()
+					logger.Debug(
+						"stream hash calculation",
+						slog.String(logger.LogValueFile, fileName),
+						slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+					)
+				}
+				if !isValid {
+					badFiles = append(badFiles, fileName)
 				}
 			}
 			finishedAt := time.Now()
