@@ -28,9 +28,6 @@ func (c Crawler) Check(checkPath string) error {
 }
 
 func (c Crawler) checkIterate(checkPath string) error {
-	onlyPath := filepath.Dir(checkPath)
-	onlyDir := filepath.Base(checkPath)
-
 	files, dirs, err := c.readFiles(checkPath)
 	if err != nil {
 		return err
@@ -47,104 +44,13 @@ func (c Crawler) checkIterate(checkPath string) error {
 		filesForCheck = append(filesForCheck, fileName)
 	}
 
-	if len(filesForCheck) > 0 {
-		if !isCheckFileExist {
-			logger.Error(
-				"no checksum",
-				slog.String(logger.LogValueStatus, "BAD"),
-				slog.String(logger.LogValuePath, checkPath),
-			)
-		} else {
-			startedAt := time.Now()
-			info, err := c.readCheckFile(path.Join(checkPath, c.checkFileName))
-			if err != nil {
-				log.Println("err", err.Error())
-				return err
-			}
-
-			badFiles := make([]string, 0, len(filesForCheck))
-			notFound := make([]string, 0, len(filesForCheck))
-			for _, fileName := range filesForCheck {
-				var hashStart, hashFinish time.Time
-				fullFilePath := path.Join(checkPath, fileName)
-
-				// open and calculate
-				fileInfo, ok := info[fileName]
-				if !ok {
-					notFound = append(notFound, fileName)
-					continue
-				}
-				// Exclude duplication
-				delete(info, fileName)
-
-				if Verbose {
-					hashStart = time.Now()
-				}
-				isValid, err := c.validateFile(fullFilePath, fileInfo.Hash)
-				if err != nil {
-					return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
-				}
-				if Verbose {
-					hashFinish = time.Now()
-					logger.Debug(
-						"stream hash calculation",
-						slog.String(logger.LogValueFile, fileName),
-						slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
-					)
-				}
-				if !isValid {
-					badFiles = append(badFiles, fileName)
-				}
-			}
-			finishedAt := time.Now()
-
-			if len(badFiles) > 0 ||
-				len(notFound) > 0 ||
-				len(info) > 0 {
-				logger.Error(
-					"folder have errors",
-					slog.String(logger.LogValueStatus, "BAD"),
-					slog.String(logger.LogValuePath, onlyPath),
-					slog.String(logger.LogValueFolder, onlyDir),
-					//slog.String(logger.LogValueStartedAt, startedAt.String()),
-					//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
-					slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
-				)
-				for _, badFile := range notFound {
-					logger.Error(
-						"no checksum",
-						slog.String(logger.LogValueStatus, "BAD"),
-						slog.String(logger.LogValueFile, badFile),
-					)
-				}
-				for _, badFile := range badFiles {
-					logger.Error(
-						"bad checksum",
-						slog.String(logger.LogValueStatus, "BAD"),
-						slog.String(logger.LogValueFile, badFile),
-					)
-				}
-				for _, fileInfo := range info {
-					logger.Error(
-						"not found",
-						slog.String(logger.LogValueStatus, "BAD"),
-						slog.String(logger.LogValueFile, fileInfo.Name),
-					)
-				}
-			} else {
-				logger.Info(
-					"Success",
-					slog.String(logger.LogValueStatus, "GOOD"),
-					slog.String(logger.LogValuePath, onlyPath),
-					slog.String(logger.LogValueFolder, onlyDir),
-					//slog.String(logger.LogValueStartedAt, startedAt.String()),
-					//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
-					slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
-				)
-			}
-		}
+	// Check files
+	err = c.checkIterateFiles(checkPath, isCheckFileExist, filesForCheck)
+	if err != nil {
+		return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
 	}
 
+	// Recursive check other directories
 	for _, dir := range dirs {
 		if dir.Name() == ".git" {
 			// FIXME: remove
@@ -175,6 +81,123 @@ func (c Crawler) validateFile(checkFilePath string, hash []byte) (bool, error) {
 	}
 
 	return isValid, nil
+}
+func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, filesForCheck []string) error {
+	onlyPath := filepath.Dir(checkPath)
+	onlyDir := filepath.Base(checkPath)
+
+	if len(filesForCheck) == 0 {
+		return nil
+	}
+
+	if !isCheckFileExist {
+		logger.Error(
+			"no checksum",
+			slog.String(logger.LogValueStatus, "BAD"),
+			slog.String(logger.LogValuePath, checkPath),
+		)
+		return nil
+	}
+
+	// Track time of checking current directory
+	startedAt := time.Now()
+
+	// Parse file with validation info
+	info, err := c.readCheckFile(path.Join(checkPath, c.checkFileName))
+	if err != nil {
+		log.Println("err", err.Error())
+		return err
+	}
+
+	// Prepare lists for files with invalid checksums and not exist files
+	var badFiles, notFound []string
+
+	// Iterate through all files and compare checksum
+	for _, fileName := range filesForCheck {
+		// Check if file exist in checksum file
+		fileInfo, ok := info[fileName]
+		if !ok {
+			notFound = append(notFound, fileName)
+			continue
+		}
+		// Exclude duplication
+		delete(info, fileName)
+
+		// Build full path to required file
+		fullFilePath := path.Join(checkPath, fileName)
+
+		// Track time calculation of hash sum for selected file
+		var hashStart, hashFinish time.Time
+		if Verbose {
+			hashStart = time.Now()
+		}
+
+		isValid, err := c.validateFile(fullFilePath, fileInfo.Hash)
+		if err != nil {
+			return fmt.Errorf("Crawler.checkIterateFiles: %w", err)
+		}
+		if Verbose {
+			hashFinish = time.Now()
+			logger.Debug(
+				"stream hash calculation",
+				slog.String(logger.LogValueFile, fileName),
+				slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+			)
+		}
+		if !isValid {
+			badFiles = append(badFiles, fileName)
+		}
+	}
+	finishedAt := time.Now()
+
+	// Print all found errors for current directory
+	if len(badFiles) > 0 ||
+		len(notFound) > 0 ||
+		len(info) > 0 {
+		logger.Error(
+			"folder have errors",
+			slog.String(logger.LogValueStatus, "BAD"),
+			slog.String(logger.LogValuePath, onlyPath),
+			slog.String(logger.LogValueFolder, onlyDir),
+			//slog.String(logger.LogValueStartedAt, startedAt.String()),
+			//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+			slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+		)
+		for _, badFile := range notFound {
+			logger.Error(
+				"no checksum",
+				slog.String(logger.LogValueStatus, "BAD"),
+				slog.String(logger.LogValueFile, badFile),
+			)
+		}
+		for _, badFile := range badFiles {
+			logger.Error(
+				"bad checksum",
+				slog.String(logger.LogValueStatus, "BAD"),
+				slog.String(logger.LogValueFile, badFile),
+			)
+		}
+		for _, fileInfo := range info {
+			logger.Error(
+				"not found",
+				slog.String(logger.LogValueStatus, "BAD"),
+				slog.String(logger.LogValueFile, fileInfo.Name),
+			)
+		}
+		return nil
+	}
+
+	logger.Info(
+		"Success",
+		slog.String(logger.LogValueStatus, "GOOD"),
+		slog.String(logger.LogValuePath, onlyPath),
+		slog.String(logger.LogValueFolder, onlyDir),
+		//slog.String(logger.LogValueStartedAt, startedAt.String()),
+		//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+		slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+	)
+
+	return nil
 }
 
 func (c Crawler) splitChecksumFileLine(line string) (CheckFileInfo, error) {
