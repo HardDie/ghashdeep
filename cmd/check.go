@@ -24,6 +24,7 @@ var checkCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+		logger.Info("Hash algorithm: " + hash.Name())
 
 		// listen app termination signals.
 		signalChan := make(chan os.Signal, 1)

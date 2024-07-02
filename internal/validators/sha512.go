@@ -28,7 +28,7 @@ func (v Sha512Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) 
 	h := sha512.New()
 	_, err := io.Copy(h, s)
 	if err != nil {
-		return false, fmt.Errorf("XxhashValidator.ValidateStream() io.Copy: %w", err)
+		return false, fmt.Errorf("Sha512Validator.ValidateStream() io.Copy: %w", err)
 	}
 	fileHash := h.Sum(nil)
 	return bytes.Equal(fileHash, hash), nil
