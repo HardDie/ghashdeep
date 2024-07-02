@@ -213,13 +213,13 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 }
 
 func (c Crawler) splitChecksumFileLine(line string) (CheckFileInfo, error) {
-	if len(line) < c.hash.Len()+3 /* two spaces and at least one name symbol */ {
+	if len(line) < c.hashLen+3 /* two spaces and at least one name symbol */ {
 		return CheckFileInfo{}, fmt.Errorf("invalid length")
 	}
 
 	info := CheckFileInfo{
-		HashString: line[:c.hash.Len()],
-		Name:       line[c.hash.Len()+2:],
+		HashString: line[:c.hashLen],
+		Name:       line[c.hashLen+2:],
 	}
 	hash, err := hex.DecodeString(info.HashString)
 	if err != nil {

@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -10,7 +11,6 @@ import (
 
 type HashMethod interface {
 	Name() string
-	Len() int
 	Hash(file []byte) []byte
 	Validate(file, hash []byte) bool
 	ValidateStream(s io.Reader, hash []byte) (bool, error)
@@ -25,12 +25,14 @@ type CheckFileInfo struct {
 type Crawler struct {
 	hash          HashMethod
 	checkFileName string
+	hashLen       int
 }
 
 func New(hash HashMethod) *Crawler {
 	return &Crawler{
 		hash:          hash,
 		checkFileName: "checksum." + hash.Name(),
+		hashLen:       calcHashLen(hash),
 	}
 }
 
@@ -77,4 +79,12 @@ func (c Crawler) readFiles(checkPath string) ([]os.FileInfo, []os.FileInfo, erro
 	})
 
 	return resFiles, resDirs, nil
+}
+
+func calcHashLen(
+	hash interface {
+		Hash(file []byte) []byte
+	},
+) int {
+	return len(hex.EncodeToString(hash.Hash([]byte{1})))
 }
