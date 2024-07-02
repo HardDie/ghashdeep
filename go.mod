@@ -3,6 +3,7 @@ module github.com/HardDie/LibraryHashCheck
 go 1.22.2
 
 require (
+	github.com/cespare/xxhash v1.1.0
 	github.com/lmittmann/tint v1.0.4
 	github.com/oklog/run v1.1.0
 	github.com/spf13/cobra v1.8.0
