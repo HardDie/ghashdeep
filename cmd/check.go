@@ -12,7 +12,6 @@ import (
 
 	"github.com/HardDie/LibraryHashCheck/internal/crawler"
 	"github.com/HardDie/LibraryHashCheck/internal/logger"
-	"github.com/HardDie/LibraryHashCheck/internal/validators"
 )
 
 // checkCmd represents the check command
@@ -51,11 +50,8 @@ to quickly create a Cobra application.`,
 				return fmt.Errorf("check os.Getwd: %w", err)
 			}
 
-			var hash crawler.HashMethod
-			hash = validators.NewMd5()
-
 			err = crawler.
-				New(hash).
+				New(GlobalValidator).
 				Check(rootDir)
 			if err != nil {
 				return fmt.Errorf("check: %w", err)

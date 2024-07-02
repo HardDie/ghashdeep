@@ -7,6 +7,13 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/HardDie/LibraryHashCheck/internal/crawler"
+	"github.com/HardDie/LibraryHashCheck/internal/validators"
+)
+
+var (
+	GlobalValidator crawler.HashMethod = validators.NewMd5()
 )
 
 var Version string

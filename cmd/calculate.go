@@ -13,7 +13,6 @@ import (
 
 	"github.com/HardDie/LibraryHashCheck/internal/crawler"
 	"github.com/HardDie/LibraryHashCheck/internal/logger"
-	"github.com/HardDie/LibraryHashCheck/internal/validators"
 )
 
 // calculateCmd represents the calculate command
@@ -64,11 +63,8 @@ to quickly create a Cobra application.`,
 				return fmt.Errorf("check os.Getwd: %w", err)
 			}
 
-			var hash crawler.HashMethod
-			hash = validators.NewMd5()
-
 			err = crawler.
-				New(hash).
+				New(GlobalValidator).
 				Calculate(rootDir)
 			if err != nil {
 				return fmt.Errorf("calculate: %w", err)
