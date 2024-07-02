@@ -11,8 +11,8 @@ import (
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 
-	"github.com/HardDie/LibraryHashCheck/internal/crawler"
-	"github.com/HardDie/LibraryHashCheck/internal/logger"
+	"github.com/HardDie/ghashdeep/internal/crawler"
+	"github.com/HardDie/ghashdeep/internal/logger"
 )
 
 // checkCmd represents the check command

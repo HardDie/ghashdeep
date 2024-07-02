@@ -1,4 +1,4 @@
-module github.com/HardDie/LibraryHashCheck
+module github.com/HardDie/ghashdeep
 
 go 1.22.2
 

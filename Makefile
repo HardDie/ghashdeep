@@ -1,3 +1,3 @@
 .PHONY: build
 build:
-	go build -o LibraryHashCheck main.go
+	go build -o ghashdeep main.go

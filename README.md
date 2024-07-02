@@ -1,4 +1,4 @@
-# libraryHashCheck
+# ghashdeep
 
 If you have a large library of files (music, images, videos, etc.), this utility will help you easily calculate or check previously calculated hash sums of the entire library recursively with a single command.
 
@@ -8,7 +8,7 @@ If you have a large library of files (music, images, videos, etc.), this utility
 
 If you want to calculate the hash of all files starting from the current directory and recursively for all subdirectories, run this command:
 ```bash
-libraryHashCheck calculate
+ghashdeep calculate
 ```
 This command will create a file named "checksum.{md5}" in each file folder, the extension will depend on the checksum algorithm selected, the default is md5.
 
@@ -57,7 +57,7 @@ $ md5sum -c checksum.md5
 
 If you have checksum files, you can just run this command and if everything is fine, you will see the following:
 ```bash
-$ libraryHashCheck check
+$ ghashdeep check
 Jul  1 23:08:45.596 INF crawler/check.go:202 Success status=GOOD path=/tmp/mytmp/test folder=a duration=249.231µs
 Jul  1 23:08:45.597 INF crawler/check.go:202 Success status=GOOD path=/tmp/mytmp/test/b folder=b1 duration=111.057µs
 ```
@@ -65,7 +65,7 @@ Jul  1 23:08:45.597 INF crawler/check.go:202 Success status=GOOD path=/tmp/mytmp
 #### Invalid checksum:
 If some files have changed their checksum, you will see the following message:
 ```bash
-$ libraryHashCheck check
+$ ghashdeep check
 Jul  1 23:11:28.653 ERR crawler/check.go:169 folder have errors status=BAD path=/tmp/mytmp/test folder=a duration=149.804µs
 Jul  1 23:11:28.653 ERR crawler/check.go:186 bad checksum status=BAD file=1.txt
 ```
@@ -74,7 +74,7 @@ This message means that the file named '1.txt' in folder 'a' has an invalid chec
 #### File not found:
 If a file has been deleted or a new file has been added but does not exist in checksum.md5, you will see these errors:
 ```bash
-$ libraryHashCheck check
+$ ghashdeep check
 Jul  1 23:18:01.588 ERR crawler/check.go:169 folder have errors status=BAD path=/tmp/mytmp/test folder=a duration=104.575µs
 Jul  1 23:18:01.588 ERR crawler/check.go:179 no checksum status=BAD file=2.txt
 Jul  1 23:18:01.588 ERR crawler/check.go:193 not found status=BAD file=1.txt

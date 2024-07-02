@@ -9,14 +9,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HardDie/LibraryHashCheck/internal/crawler"
-	"github.com/HardDie/LibraryHashCheck/internal/validators"
+	"github.com/HardDie/ghashdeep/internal/crawler"
+	"github.com/HardDie/ghashdeep/internal/validators"
 )
 
 var Version string
 
 var rootCmd = &cobra.Command{
-	Use:   "LibraryHashCheck",
+	Use:   "ghashdeep",
 	Short: "This utility will help you easily calculate or check previously calculated hash sums of the entire library recursively with a single command",
 }
 

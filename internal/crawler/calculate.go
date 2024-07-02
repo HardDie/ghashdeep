@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/HardDie/LibraryHashCheck/internal/logger"
-	"github.com/HardDie/LibraryHashCheck/internal/utils"
+	"github.com/HardDie/ghashdeep/internal/logger"
+	"github.com/HardDie/ghashdeep/internal/utils"
 )
 
 func (c Crawler) Calculate(checkPath string) error {

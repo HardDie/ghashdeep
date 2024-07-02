@@ -6,7 +6,7 @@ package main
 import (
 	"runtime/debug"
 
-	"github.com/HardDie/LibraryHashCheck/cmd"
+	"github.com/HardDie/ghashdeep/cmd"
 )
 
 var Version = "dev"
