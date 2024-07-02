@@ -29,7 +29,7 @@ func Execute(v string) {
 }
 
 func init() {
-	rootCmd.PersistentFlags().String("alg", "md5", "The hashing algorithm you prefer to use. Possible algorithms: md5, sha256, sha512, xxhash, blake3")
+	rootCmd.PersistentFlags().StringP("alg", "a", "md5", "The hashing algorithm you prefer to use. Possible algorithms: md5, sha256, sha512, xxhash, blake3")
 }
 
 func chooseHashAlg(cmd *cobra.Command) (crawler.HashMethod, error) {
