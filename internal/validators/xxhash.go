@@ -36,11 +36,6 @@ func (v XxhashValidator) Hash(file []byte) []byte {
 	)
 }
 
-func (v XxhashValidator) Validate(file, hash []byte) bool {
-	fileHash := v.Hash(file)
-	return bytes.Equal(fileHash, hash)
-}
-
 func (v XxhashValidator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := xxhash.New()
 	_, err := io.Copy(h, s)

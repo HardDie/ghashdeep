@@ -24,11 +24,6 @@ func (v Md5Validator) Hash(file []byte) []byte {
 	return hash[0:]
 }
 
-func (v Md5Validator) Validate(file, hash []byte) bool {
-	fileHash := v.Hash(file)
-	return bytes.Equal(fileHash, hash)
-}
-
 func (v Md5Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := md5.New()
 	_, err := io.Copy(h, s)

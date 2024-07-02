@@ -24,11 +24,6 @@ func (v Sha512Validator) Hash(file []byte) []byte {
 	return hash[0:]
 }
 
-func (v Sha512Validator) Validate(file, hash []byte) bool {
-	fileHash := v.Hash(file)
-	return bytes.Equal(fileHash, hash)
-}
-
 func (v Sha512Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := sha512.New()
 	_, err := io.Copy(h, s)
