@@ -18,14 +18,13 @@ import (
 // calculateCmd represents the calculate command
 var calculateCmd = &cobra.Command{
 	Use:   "calculate",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Recursive hash calculation for all files",
 	Run: func(cmd *cobra.Command, args []string) {
+		hash, err := chooseHashAlg(cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		// listen app termination signals.
 		signalChan := make(chan os.Signal, 1)
 		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -64,7 +63,7 @@ to quickly create a Cobra application.`,
 			}
 
 			err = crawler.
-				New(GlobalValidator).
+				New(hash).
 				Calculate(rootDir)
 			if err != nil {
 				return fmt.Errorf("calculate: %w", err)

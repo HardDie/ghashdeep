@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -17,14 +18,13 @@ import (
 // checkCmd represents the check command
 var checkCmd = &cobra.Command{
 	Use:   "check",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Recursive search for checksum.* files and checksum verification",
 	Run: func(cmd *cobra.Command, args []string) {
+		hash, err := chooseHashAlg(cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		// listen app termination signals.
 		signalChan := make(chan os.Signal, 1)
 		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -51,7 +51,7 @@ to quickly create a Cobra application.`,
 			}
 
 			err = crawler.
-				New(GlobalValidator).
+				New(hash).
 				Check(rootDir)
 			if err != nil {
 				return fmt.Errorf("check: %w", err)
@@ -76,14 +76,4 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(checkCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// checkCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// checkCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
