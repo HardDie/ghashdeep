@@ -48,7 +48,7 @@ func (c Crawler) checkIterate(checkPath string) error {
 	// Check files
 	err = c.checkIterateFiles(checkPath, isCheckFileExist, filesForCheck)
 	if err != nil {
-		return fmt.Errorf("Crawler.iterate(%s): %w", checkPath, err)
+		return fmt.Errorf("Crawler.checkIterate(%s): %w", checkPath, err)
 	}
 
 	// Recursive check other directories
@@ -171,8 +171,8 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 			slog.String(logger.LogValueStatus, "BAD"),
 			slog.String(logger.LogValuePath, onlyPath),
 			slog.String(logger.LogValueFolder, onlyDir),
-			//slog.String(logger.LogValueStartedAt, startedAt.String()),
-			//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+			// slog.String(logger.LogValueStartedAt, startedAt.String()),
+			// slog.String(logger.LogValueFinishedAt, finishedAt.String()),
 			slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
 		)
 		for _, badFile := range notFound {
@@ -204,8 +204,8 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 		slog.String(logger.LogValueStatus, "GOOD"),
 		slog.String(logger.LogValuePath, onlyPath),
 		slog.String(logger.LogValueFolder, onlyDir),
-		//slog.String(logger.LogValueStartedAt, startedAt.String()),
-		//slog.String(logger.LogValueFinishedAt, finishedAt.String()),
+		// slog.String(logger.LogValueStartedAt, startedAt.String()),
+		// slog.String(logger.LogValueFinishedAt, finishedAt.String()),
 		slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
 	)
 
@@ -236,7 +236,7 @@ func (c Crawler) readCheckFile(checkFilePath string) (map[string]CheckFileInfo, 
 
 	lines := strings.Split(string(data), "\n")
 	res := make(map[string]CheckFileInfo, len(lines))
-	//res := make([]CheckFileInfo, 0, len(lines))
+	// res := make([]CheckFileInfo, 0, len(lines))
 	for i, line := range lines {
 		if len(line) == 0 {
 			continue

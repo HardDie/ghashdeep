@@ -8,6 +8,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
+	"sync"
 	"time"
 
 	"github.com/HardDie/ghashdeep/internal/logger"
@@ -23,48 +25,27 @@ func (c Crawler) Calculate(checkPath string) error {
 }
 
 func (c Crawler) calculateIterate(checkPath string) error {
-	onlyPath := filepath.Dir(checkPath)
-	onlyDir := filepath.Base(checkPath)
-
 	files, dirs, err := c.readFiles(checkPath)
 	if err != nil {
 		return err
 	}
 
-	startedAt := time.Now()
-	info := make([]CheckFileInfo, 0, len(files))
+	filesForCalculate := make([]string, 0, len(files))
 	for _, file := range files {
 		fileName := file.Name()
 		if fileName == c.checkFileName {
 			continue
 		}
-		fileData, err := utils.ReadAllFile(path.Join(checkPath, fileName))
-		if err != nil {
-			return fmt.Errorf("Crawler.calculateIterate(%s): %w", checkPath, err)
-		}
-		fileHash := c.hash.Hash(fileData)
-		info = append(info, CheckFileInfo{
-			Name:       fileName,
-			Hash:       fileHash,
-			HashString: hex.EncodeToString(fileHash),
-		})
-	}
-	finishedAt := time.Now()
-
-	if len(info) > 0 {
-		checkFilePath := path.Join(checkPath, c.checkFileName)
-		err = c.writeCheckFile(checkFilePath, info)
-		if err != nil {
-			return fmt.Errorf("Crawler.calculateIterate(%s): %w", checkPath, err)
-		}
-		logger.Info(
-			"Calculated!",
-			slog.String(logger.LogValuePath, onlyPath),
-			slog.String(logger.LogValueFolder, onlyDir),
-			slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
-		)
+		filesForCalculate = append(filesForCalculate, fileName)
 	}
 
+	// Calculate hash for files
+	err = c.calculateIterateFiles(checkPath, filesForCalculate)
+	if err != nil {
+		return fmt.Errorf("Crawler.calculateIterate(%s): %w", checkPath, err)
+	}
+
+	// Recursive check other directories
 	for _, dir := range dirs {
 		if dir.Name() == ".git" {
 			// FIXME: remove
@@ -94,6 +75,78 @@ func (c Crawler) writeCheckFile(checkFilePath string, info []CheckFileInfo) erro
 		if err != nil {
 			return fmt.Errorf("Crawler.writeCheckFile(%s) f.WriteString: %w", checkFilePath, err)
 		}
+	}
+
+	return nil
+}
+func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []string) error {
+	onlyPath := filepath.Dir(checkPath)
+	onlyDir := filepath.Base(checkPath)
+
+	if len(filesForCalculate) == 0 {
+		return nil
+	}
+
+	// Track time of checking current directory
+	startedAt := time.Now()
+
+	pr := utils.NewProcessing()
+
+	info := make([]CheckFileInfo, 0, len(filesForCalculate))
+	for _, fileName := range filesForCalculate {
+		pr.Push(fileName, func(m *sync.Mutex) error {
+			// Track time calculation of hash sum for selected file
+			var hashStart, hashFinish time.Time
+			if Verbose {
+				hashStart = time.Now()
+			}
+
+			fileData, err := utils.ReadAllFile(path.Join(checkPath, fileName))
+			if err != nil {
+				return fmt.Errorf("Crawler.calculateIterateFiles(%s): %w", checkPath, err)
+			}
+			fileHash := c.hash.Hash(fileData)
+			if Verbose {
+				hashFinish = time.Now()
+				logger.Debug(
+					"stream hash calculation",
+					slog.String(logger.LogValueFile, fileName),
+					slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+				)
+			}
+
+			m.Lock()
+			info = append(info, CheckFileInfo{
+				Name:       fileName,
+				Hash:       fileHash,
+				HashString: hex.EncodeToString(fileHash),
+			})
+			m.Unlock()
+			return nil
+		})
+	}
+	err := pr.Run()
+	if err != nil {
+		return fmt.Errorf("Crawler.calculateIterateFiles() pr.Run: %w", err)
+	}
+	finishedAt := time.Now()
+
+	if len(info) > 0 {
+		sort.SliceStable(info, func(i, j int) bool {
+			return info[i].Name < info[j].Name
+		})
+
+		checkFilePath := path.Join(checkPath, c.checkFileName)
+		err = c.writeCheckFile(checkFilePath, info)
+		if err != nil {
+			return fmt.Errorf("Crawler.calculateIterateFiles(%s): %w", checkPath, err)
+		}
+		logger.Info(
+			"Calculated!",
+			slog.String(logger.LogValuePath, onlyPath),
+			slog.String(logger.LogValueFolder, onlyDir),
+			slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+		)
 	}
 
 	return nil
