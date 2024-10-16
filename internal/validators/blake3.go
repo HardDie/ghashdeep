@@ -25,6 +25,16 @@ func (v Blake3Validator) Hash(file []byte) []byte {
 	return hash[0:]
 }
 
+func (v Blake3Validator) CalculateStream(s io.Reader) ([]byte, error) {
+	h := blake3.New()
+	_, err := io.Copy(h, s)
+	if err != nil {
+		return nil, fmt.Errorf("Blake3Validator.CalculateStream() io.Copy: %w", err)
+	}
+	fileHash := h.Sum(nil)
+	return fileHash, nil
+}
+
 func (v Blake3Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := blake3.New()
 	_, err := io.Copy(h, s)
@@ -32,5 +42,5 @@ func (v Blake3Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) 
 		return false, fmt.Errorf("Blake3Validator.ValidateStream() io.Copy: %w", err)
 	}
 	fileHash := h.Sum(nil)
-	return bytes.Equal(fileHash[0:], hash), nil
+	return bytes.Equal(fileHash, hash), nil
 }

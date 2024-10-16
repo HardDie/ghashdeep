@@ -24,6 +24,16 @@ func (v Sha224Validator) Hash(file []byte) []byte {
 	return hash[0:]
 }
 
+func (v Sha224Validator) CalculateStream(s io.Reader) ([]byte, error) {
+	h := sha256.New224()
+	_, err := io.Copy(h, s)
+	if err != nil {
+		return nil, fmt.Errorf("Sha224Validator.CalculateStream() io.Copy: %w", err)
+	}
+	fileHash := h.Sum(nil)
+	return fileHash, nil
+}
+
 func (v Sha224Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := sha256.New224()
 	_, err := io.Copy(h, s)

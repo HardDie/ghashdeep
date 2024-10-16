@@ -24,6 +24,16 @@ func (v Sha384Validator) Hash(file []byte) []byte {
 	return hash[0:]
 }
 
+func (v Sha384Validator) CalculateStream(s io.Reader) ([]byte, error) {
+	h := sha512.New384()
+	_, err := io.Copy(h, s)
+	if err != nil {
+		return nil, fmt.Errorf("Sha384Validator.CalculateStream() io.Copy: %w", err)
+	}
+	fileHash := h.Sum(nil)
+	return fileHash, nil
+}
+
 func (v Sha384Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := sha512.New384()
 	_, err := io.Copy(h, s)

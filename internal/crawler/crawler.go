@@ -14,6 +14,7 @@ import (
 type HashMethod interface {
 	Name() string
 	Hash(file []byte) []byte
+	CalculateStream(s io.Reader) ([]byte, error)
 	ValidateStream(s io.Reader, hash []byte) (bool, error)
 }
 

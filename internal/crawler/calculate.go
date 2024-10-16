@@ -59,6 +59,24 @@ func (c Crawler) calculateIterate(checkPath string) error {
 
 	return nil
 }
+func (c Crawler) calculateFile(calculateFilePath string) ([]byte, error) {
+	f, err := os.Open(calculateFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("Crawler.calculateFile(%s) os.Open: %w", calculateFilePath, err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			log.Printf("Crawler.calculateFile(%s) f.Close: %v", calculateFilePath, e.Error())
+		}
+	}()
+
+	hash, err := c.hash.CalculateStream(f)
+	if err != nil {
+		return nil, fmt.Errorf("Crawler.calculateFile(%s) CalculateStream: %w", calculateFilePath, err)
+	}
+
+	return hash, nil
+}
 func (c Crawler) writeCheckFile(checkFilePath string, info []CheckFileInfo) error {
 	f, err := os.Create(checkFilePath)
 	if err != nil {
@@ -94,6 +112,9 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 
 	info := make([]CheckFileInfo, 0, len(filesForCalculate))
 	for _, fileName := range filesForCalculate {
+		// Build full path to required file
+		fullFilePath := path.Join(checkPath, fileName)
+
 		pr.Push(fileName, func(m *sync.Mutex) error {
 			// Track time calculation of hash sum for selected file
 			var hashStart, hashFinish time.Time
@@ -101,11 +122,10 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 				hashStart = time.Now()
 			}
 
-			fileData, err := utils.ReadAllFile(path.Join(checkPath, fileName))
+			fileHash, err := c.calculateFile(fullFilePath)
 			if err != nil {
-				return fmt.Errorf("Crawler.calculateIterateFiles(%s): %w", checkPath, err)
+				return fmt.Errorf("Crawler.calculateIterateFiles: %w", err)
 			}
-			fileHash := c.hash.Hash(fileData)
 			if Verbose {
 				hashFinish = time.Now()
 				logger.Debug(

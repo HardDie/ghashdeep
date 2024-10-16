@@ -36,6 +36,16 @@ func (v XxhashValidator) Hash(file []byte) []byte {
 	)
 }
 
+func (v XxhashValidator) CalculateStream(s io.Reader) ([]byte, error) {
+	h := xxhash.New()
+	_, err := io.Copy(h, s)
+	if err != nil {
+		return nil, fmt.Errorf("XxhashValidator.CalculateStream() io.Copy: %w", err)
+	}
+	fileHash := h.Sum(nil)
+	return fileHash, nil
+}
+
 func (v XxhashValidator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := xxhash.New()
 	_, err := io.Copy(h, s)

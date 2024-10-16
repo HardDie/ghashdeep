@@ -24,6 +24,16 @@ func (v Sha1Validator) Hash(file []byte) []byte {
 	return hash[0:]
 }
 
+func (v Sha1Validator) CalculateStream(s io.Reader) ([]byte, error) {
+	h := sha1.New()
+	_, err := io.Copy(h, s)
+	if err != nil {
+		return nil, fmt.Errorf("Sha1Validator.CalculateStream() io.Copy: %w", err)
+	}
+	fileHash := h.Sum(nil)
+	return fileHash, nil
+}
+
 func (v Sha1Validator) ValidateStream(s io.Reader, hash []byte) (bool, error) {
 	h := sha1.New()
 	_, err := io.Copy(h, s)
