@@ -20,22 +20,6 @@ func (v Validator) Name() string {
 	return "xxhash"
 }
 
-func (v Validator) Hash(file []byte) []byte {
-	// https://github.com/cespare/xxhash/blob/998dce232f17418a7a5721ecf87ca714025a3243/xxhash.go#L113
-	s := xxhash.Sum64(file)
-	return append(
-		[]byte{},
-		byte(s>>56),
-		byte(s>>48),
-		byte(s>>40),
-		byte(s>>32),
-		byte(s>>24),
-		byte(s>>16),
-		byte(s>>8),
-		byte(s),
-	)
-}
-
 func (v Validator) CalculateStream(s io.Reader) ([]byte, error) {
 	h := xxhash.New()
 	_, err := io.Copy(h, s)

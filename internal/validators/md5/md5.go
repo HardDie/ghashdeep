@@ -19,11 +19,6 @@ func (v Validator) Name() string {
 	return "md5"
 }
 
-func (v Validator) Hash(file []byte) []byte {
-	hash := md5.Sum(file)
-	return hash[0:]
-}
-
 func (v Validator) CalculateStream(s io.Reader) ([]byte, error) {
 	h := md5.New()
 	_, err := io.Copy(h, s)

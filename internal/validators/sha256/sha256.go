@@ -19,11 +19,6 @@ func (v Validator) Name() string {
 	return "sha256"
 }
 
-func (v Validator) Hash(file []byte) []byte {
-	hash := sha256.Sum256(file)
-	return hash[0:]
-}
-
 func (v Validator) CalculateStream(s io.Reader) ([]byte, error) {
 	h := sha256.New()
 	_, err := io.Copy(h, s)

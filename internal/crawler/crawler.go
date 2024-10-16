@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -20,7 +21,6 @@ import (
 
 type HashMethod interface {
 	Name() string
-	Hash(file []byte) []byte
 	CalculateStream(s io.Reader) ([]byte, error)
 	ValidateStream(s io.Reader, hash []byte) (bool, error)
 }
@@ -92,10 +92,14 @@ func (c Crawler) readFiles(checkPath string) ([]os.FileInfo, []os.FileInfo, erro
 
 func calcHashLen(
 	hash interface {
-		Hash(file []byte) []byte
+		CalculateStream(s io.Reader) ([]byte, error)
 	},
 ) int {
-	return len(hex.EncodeToString(hash.Hash([]byte{1})))
+	fileHash, err := hash.CalculateStream(bytes.NewReader([]byte{1}))
+	if err != nil {
+		panic(err)
+	}
+	return len(hex.EncodeToString(fileHash))
 }
 
 func ChooseHashAlg(alg string) HashMethod {

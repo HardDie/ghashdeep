@@ -19,11 +19,6 @@ func (v Validator) Name() string {
 	return "sha384"
 }
 
-func (v Validator) Hash(file []byte) []byte {
-	hash := sha512.Sum384(file)
-	return hash[0:]
-}
-
 func (v Validator) CalculateStream(s io.Reader) ([]byte, error) {
 	h := sha512.New384()
 	_, err := io.Copy(h, s)
