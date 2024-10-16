@@ -76,7 +76,7 @@ func (c Crawler) validateFile(checkFilePath string, hash []byte) (bool, error) {
 		}
 	}()
 
-	isValid, err := c.hash.ValidateStream(f, hash)
+	isValid, err := c.ValidateStream(f, hash)
 	if err != nil {
 		return false, fmt.Errorf("Crawler.validateFile(%s) ValidateStream: %w", checkFilePath, err)
 	}

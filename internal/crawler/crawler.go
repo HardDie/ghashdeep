@@ -22,7 +22,6 @@ import (
 type HashMethod interface {
 	Name() string
 	CalculateStream(s io.Reader) ([]byte, error)
-	ValidateStream(s io.Reader, hash []byte) (bool, error)
 }
 
 type CheckFileInfo struct {
@@ -43,6 +42,14 @@ func New(hash HashMethod) *Crawler {
 		checkFileName: "checksum." + hash.Name(),
 		hashLen:       calcHashLen(hash),
 	}
+}
+
+func (c Crawler) ValidateStream(s io.Reader, hash []byte) (bool, error) {
+	fileHash, err := c.hash.CalculateStream(s)
+	if err != nil {
+		return false, fmt.Errorf("CalculateStream: %w", err)
+	}
+	return bytes.Equal(fileHash, hash), nil
 }
 
 func (c Crawler) readFiles(checkPath string) ([]os.FileInfo, []os.FileInfo, error) {
