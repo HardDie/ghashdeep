@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"sort"
+
+	"github.com/HardDie/ghashdeep/internal/validators"
 )
 
 type HashMethod interface {
@@ -86,4 +88,29 @@ func calcHashLen(
 	},
 ) int {
 	return len(hex.EncodeToString(hash.Hash([]byte{1})))
+}
+
+func ChooseHashAlg(alg string) HashMethod {
+	if alg == "" {
+		alg = "md5"
+	}
+	switch alg {
+	case "md5":
+		return validators.NewMd5()
+	case "sha1":
+		return validators.NewSha1()
+	case "sha224":
+		return validators.NewSha224()
+	case "sha256":
+		return validators.NewSha256()
+	case "sha384":
+		return validators.NewSha384()
+	case "sha512":
+		return validators.NewSha512()
+	case "xxhash":
+		return validators.NewXxhash()
+	case "blake3":
+		return validators.NewBlake3()
+	}
+	return nil
 }

@@ -20,8 +20,8 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Recursive search for checksum.* files and checksum verification",
 	Run: func(cmd *cobra.Command, args []string) {
-		hash, err := chooseHashAlg(cmd)
-		if err != nil {
+		hash, err := chooseHashAlgCmd(cmd)
+		if hash != nil {
 			log.Fatal(err)
 		}
 		logger.Info("Hash algorithm: " + hash.Name())

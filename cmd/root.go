@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/HardDie/ghashdeep/internal/crawler"
-	"github.com/HardDie/ghashdeep/internal/validators"
 )
 
 var Version string
@@ -32,28 +31,11 @@ func init() {
 	rootCmd.PersistentFlags().StringP("algorithm", "a", "md5", "The hashing algorithm you prefer to use. Possible algorithms: md5, sha1, sha224, sha256, sha384, sha512, xxhash, blake3")
 }
 
-func chooseHashAlg(cmd *cobra.Command) (crawler.HashMethod, error) {
+func chooseHashAlgCmd(cmd *cobra.Command) (crawler.HashMethod, error) {
 	alg, _ := cmd.Flags().GetString("algorithm")
-	if alg == "" {
-		alg = "md5"
+	hash := crawler.ChooseHashAlg(alg)
+	if hash == nil {
+		return nil, fmt.Errorf("unknown flag --alg value %q", alg)
 	}
-	switch alg {
-	case "md5":
-		return validators.NewMd5(), nil
-	case "sha1":
-		return validators.NewSha1(), nil
-	case "sha224":
-		return validators.NewSha224(), nil
-	case "sha256":
-		return validators.NewSha256(), nil
-	case "sha384":
-		return validators.NewSha384(), nil
-	case "sha512":
-		return validators.NewSha512(), nil
-	case "xxhash":
-		return validators.NewXxhash(), nil
-	case "blake3":
-		return validators.NewBlake3(), nil
-	}
-	return nil, fmt.Errorf("unknown flag --alg value %q", alg)
+	return hash, nil
 }

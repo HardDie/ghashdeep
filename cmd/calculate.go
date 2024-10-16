@@ -20,7 +20,7 @@ var calculateCmd = &cobra.Command{
 	Use:   "calculate",
 	Short: "Recursive hash calculation for all files",
 	Run: func(cmd *cobra.Command, args []string) {
-		hash, err := chooseHashAlg(cmd)
+		hash, err := chooseHashAlgCmd(cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
