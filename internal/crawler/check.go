@@ -97,7 +97,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 			slog.String(logger.LogValueStatus, "BAD"),
 			slog.String(logger.LogValuePath, checkPath),
 		)
-		return nil
+		return fmt.Errorf("checksum file not found")
 	}
 
 	// Track time of checking current directory
@@ -196,7 +196,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 				slog.String(logger.LogValueFile, fileInfo.Name),
 			)
 		}
-		return nil
+		return fmt.Errorf("have invalid files")
 	}
 
 	logger.Info(
