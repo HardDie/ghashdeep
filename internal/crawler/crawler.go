@@ -8,7 +8,14 @@ import (
 	"os"
 	"sort"
 
-	"github.com/HardDie/ghashdeep/internal/validators"
+	"github.com/HardDie/ghashdeep/internal/validators/blake3"
+	"github.com/HardDie/ghashdeep/internal/validators/md5"
+	"github.com/HardDie/ghashdeep/internal/validators/sha1"
+	"github.com/HardDie/ghashdeep/internal/validators/sha224"
+	"github.com/HardDie/ghashdeep/internal/validators/sha256"
+	"github.com/HardDie/ghashdeep/internal/validators/sha384"
+	"github.com/HardDie/ghashdeep/internal/validators/sha512"
+	"github.com/HardDie/ghashdeep/internal/validators/xxhash"
 )
 
 type HashMethod interface {
@@ -97,21 +104,21 @@ func ChooseHashAlg(alg string) HashMethod {
 	}
 	switch alg {
 	case "md5":
-		return validators.NewMd5()
+		return md5.New()
 	case "sha1":
-		return validators.NewSha1()
+		return sha1.New()
 	case "sha224":
-		return validators.NewSha224()
+		return sha224.New()
 	case "sha256":
-		return validators.NewSha256()
+		return sha256.New()
 	case "sha384":
-		return validators.NewSha384()
+		return sha384.New()
 	case "sha512":
-		return validators.NewSha512()
+		return sha512.New()
 	case "xxhash":
-		return validators.NewXxhash()
+		return xxhash.New()
 	case "blake3":
-		return validators.NewBlake3()
+		return blake3.New()
 	}
 	return nil
 }
