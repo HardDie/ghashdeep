@@ -3,6 +3,7 @@ package crawler
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -17,6 +18,11 @@ import (
 	"github.com/HardDie/ghashdeep/internal/validators/sha384"
 	"github.com/HardDie/ghashdeep/internal/validators/sha512"
 	"github.com/HardDie/ghashdeep/internal/validators/xxhash"
+)
+
+var (
+	ErrChecksumNotFound = errors.New("checksum file not found")
+	ErrHaveInvalidFiles = errors.New("have invalid files")
 )
 
 type HashMethod interface {

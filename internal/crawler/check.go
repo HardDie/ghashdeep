@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -29,6 +30,8 @@ func (c Crawler) Check(checkPath string) error {
 }
 
 func (c Crawler) checkIterate(checkPath string) error {
+	var storeError error
+
 	files, dirs, err := c.readFiles(checkPath)
 	if err != nil {
 		return err
@@ -48,7 +51,14 @@ func (c Crawler) checkIterate(checkPath string) error {
 	// Check files
 	err = c.checkIterateFiles(checkPath, isCheckFileExist, filesForCheck)
 	if err != nil {
-		return fmt.Errorf("Crawler.checkIterate(%s): %w", checkPath, err)
+		switch {
+		case errors.Is(err, ErrChecksumNotFound):
+			storeError = err
+		case errors.Is(err, ErrHaveInvalidFiles):
+			storeError = err
+		default:
+			return fmt.Errorf("Crawler.checkIterate(%s): %w", checkPath, err)
+		}
 	}
 
 	// Recursive check other directories
@@ -59,10 +69,20 @@ func (c Crawler) checkIterate(checkPath string) error {
 		}
 
 		if err = c.checkIterate(path.Join(checkPath, dir.Name())); err != nil {
-			return nil
+			switch {
+			case errors.Is(err, ErrChecksumNotFound):
+				storeError = err
+			case errors.Is(err, ErrHaveInvalidFiles):
+				storeError = err
+			default:
+				return nil
+			}
 		}
 	}
 
+	if storeError != nil {
+		return storeError
+	}
 	return nil
 }
 func (c Crawler) validateFile(checkFilePath string, hash []byte) (bool, error) {
@@ -97,7 +117,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 			slog.String(logger.LogValueStatus, "BAD"),
 			slog.String(logger.LogValuePath, checkPath),
 		)
-		return fmt.Errorf("checksum file not found")
+		return ErrChecksumNotFound
 	}
 
 	// Track time of checking current directory
@@ -196,7 +216,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 				slog.String(logger.LogValueFile, fileInfo.Name),
 			)
 		}
-		return fmt.Errorf("have invalid files")
+		return ErrHaveInvalidFiles
 	}
 
 	logger.Info(
