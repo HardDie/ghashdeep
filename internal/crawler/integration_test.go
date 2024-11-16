@@ -7,8 +7,12 @@ import (
 	"os"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
+// TestIntegration this test verifies that the hash sum calculation
+// and verification are compatible and validated.
 func TestIntegration(t *testing.T) {
 	tests := []struct {
 		Validator string
@@ -27,10 +31,11 @@ func TestIntegration(t *testing.T) {
 		t.Run(tc.Validator, func(t *testing.T) {
 			// Create temp dir
 			dir, err := os.MkdirTemp("", tc.Validator+"comp")
-			if err != nil {
-				t.Fatal("error creating temp dir", err)
-			}
-			defer os.RemoveAll(dir)
+			require.NoErrorf(t, err, "error creating temp dir")
+			defer func() {
+				err := os.RemoveAll(dir)
+				require.NoError(t, err)
+			}()
 
 			name := "some.txt"
 			payload := []byte("hi")
@@ -44,28 +49,18 @@ func TestIntegration(t *testing.T) {
 			}
 			// Write example payload
 			_, err = file.Write(payload)
-			if err != nil {
-				t.Fatal("error writing data", err)
-			}
+			require.NoError(t, err, "error writing data")
 			err = file.Close()
-			if err != nil {
-				t.Fatal("error closing file", err)
-			}
+			require.NoError(t, err, "error closing file")
 
 			// Calculate hash for created file
 			hash := ChooseHashAlg(tc.Validator)
-			if hash == nil {
-				t.Fatal("error hash not found")
-			}
+			require.NotNil(t, hash, "error hash not found")
 			err = New(hash).Calculate(dir)
-			if err != nil {
-				t.Fatal("error calculating hash", err)
-			}
+			require.NoError(t, err, "error calculating hash")
 
 			err = New(hash).Check(dir)
-			if err != nil {
-				t.Fatal("error check hash", err)
-			}
+			require.NoError(t, err, "error checking hash")
 		})
 	}
 }
