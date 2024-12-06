@@ -12,3 +12,14 @@ build: ## build binary
 .PHONY: test-integration
 test-integration: ## run integration tests
 	go test -v -tags integration ./...
+
+.PHONY: update-deps
+update-deps: ## update dependency libraries
+	go get -u \
+		github.com/cespare/xxhash \
+		github.com/lmittmann/tint \
+		github.com/oklog/run \
+		github.com/spf13/cobra \
+		github.com/stretchr/testify \
+		github.com/zeebo/blake3
+	go mod tidy
