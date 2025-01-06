@@ -26,6 +26,11 @@ var checkCmd = &cobra.Command{
 		}
 		logger.Info("Hash algorithm: " + hash.Name())
 
+		cfg := getConfig(cmd)
+		if cfg.Verbose {
+			logger.Debug(fmt.Sprintf("Config: %+v", cfg))
+		}
+
 		// listen app termination signals.
 		signalChan := make(chan os.Signal, 1)
 		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -52,7 +57,7 @@ var checkCmd = &cobra.Command{
 			}
 
 			err = crawler.
-				New(hash).
+				New(hash, cfg).
 				Check(rootDir)
 			if err != nil {
 				return fmt.Errorf("check: %w", err)

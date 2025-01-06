@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/HardDie/ghashdeep/internal/entities/config"
 )
 
 func CreateTempDir(t *testing.T) string {
@@ -49,7 +51,7 @@ func AppCalculateHash(t *testing.T, hashAlg, dir string) {
 	t.Helper()
 	hash := ChooseHashAlg(hashAlg)
 	require.NotNil(t, hash, "error hash not found")
-	err := New(hash).Calculate(dir)
+	err := New(hash, config.Config{}).Calculate(dir)
 	require.NoError(t, err, "error calculating hash")
 }
 
@@ -57,7 +59,7 @@ func AppCheckHash(t *testing.T, hashAlg, dir string) {
 	t.Helper()
 	hash := ChooseHashAlg(hashAlg)
 	require.NotNil(t, hash, "error hash not found")
-	err := New(hash).Check(dir)
+	err := New(hash, config.Config{}).Check(dir)
 	require.NoError(t, err, "error checking hash")
 }
 

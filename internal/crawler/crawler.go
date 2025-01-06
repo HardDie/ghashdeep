@@ -18,6 +18,7 @@ import (
 	"github.com/HardDie/ghashdeep/internal/validators/sha384"
 	"github.com/HardDie/ghashdeep/internal/validators/sha512"
 	"github.com/HardDie/ghashdeep/internal/validators/xxhash"
+	"github.com/HardDie/ghashdeep/internal/entities/config"
 )
 
 var (
@@ -40,13 +41,17 @@ type Crawler struct {
 	hash          HashMethod
 	checkFileName string
 	hashLen       int
+
+	cfg config.Config
 }
 
-func New(hash HashMethod) *Crawler {
+func New(hash HashMethod, cfg config.Config) *Crawler {
 	return &Crawler{
 		hash:          hash,
 		checkFileName: "checksum." + hash.Name(),
 		hashLen:       calcHashLen(hash),
+
+		cfg: cfg,
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/HardDie/ghashdeep/internal/crawler"
+	"github.com/HardDie/ghashdeep/internal/entities/config"
 )
 
 var Version string
@@ -29,6 +30,7 @@ func Execute(v string) {
 
 func init() {
 	rootCmd.PersistentFlags().StringP("algorithm", "a", "md5", "The hashing algorithm you prefer to use. Possible algorithms: md5, sha1, sha224, sha256, sha384, sha512, xxhash, blake3")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose progress printing")
 }
 
 func chooseHashAlgCmd(cmd *cobra.Command) (crawler.HashMethod, error) {
@@ -38,4 +40,11 @@ func chooseHashAlgCmd(cmd *cobra.Command) (crawler.HashMethod, error) {
 		return nil, fmt.Errorf("unknown flag --alg value %q", alg)
 	}
 	return hash, nil
+}
+
+func getConfig(cmd *cobra.Command) config.Config {
+	verbose, _ := cmd.Flags().GetBool("verbose")
+	return config.Config{
+		Verbose: verbose,
+	}
 }
