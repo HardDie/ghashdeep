@@ -1,7 +1,6 @@
 package crawler
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -9,10 +8,10 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
+	"github.com/HardDie/ghashdeep/internal/entities/checkfile"
 	"github.com/HardDie/ghashdeep/internal/utils"
 )
 
@@ -123,10 +122,10 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	startedAt := time.Now()
 
 	// Parse file with validation info
-	info, err := c.readCheckFile(path.Join(checkPath, c.checkFileName))
+	checkfilePath := path.Join(checkPath, c.checkFileName)
+	check, err := checkfile.NewFromFile(checkfilePath, c.hashLen)
 	if err != nil {
-		log.Println("err", err.Error())
-		return err
+		return fmt.Errorf("checkfile.NewFromFile(%s, %d): %w", checkfilePath, c.hashLen, err)
 	}
 
 	// Prepare lists for files with invalid checksums and not exist files
@@ -137,13 +136,13 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	// Iterate through all files and compare checksum
 	for _, fileName := range filesForCheck {
 		// Check if file exist in checksum file
-		fileInfo, ok := info[fileName]
+		fileInfo, ok := check.IsFileExist(fileName)
 		if !ok {
 			notFound = append(notFound, fileName)
 			continue
 		}
 		// Exclude duplication
-		delete(info, fileName)
+		check.Delete(fileName)
 
 		// Build full path to required file
 		fullFilePath := path.Join(checkPath, fileName)
@@ -184,7 +183,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	// Print all found errors for current directory
 	if len(badFiles) > 0 ||
 		len(notFound) > 0 ||
-		len(info) > 0 {
+		check.Len() > 0 {
 		c.logger.Error(
 			"folder have errors",
 			slog.String(LogValueStatus, "BAD"),
@@ -208,7 +207,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 				slog.String(LogValueFile, badFile),
 			)
 		}
-		for _, fileInfo := range info {
+		for _, fileInfo := range check.Files {
 			c.logger.Error(
 				"not found",
 				slog.String(LogValueStatus, "BAD"),
@@ -229,43 +228,4 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	)
 
 	return nil
-}
-
-func (c Crawler) splitChecksumFileLine(line string) (CheckFileInfo, error) {
-	if len(line) < c.hashLen+3 /* two spaces and at least one name symbol */ {
-		return CheckFileInfo{}, fmt.Errorf("invalid length")
-	}
-
-	info := CheckFileInfo{
-		HashString: line[:c.hashLen],
-		Name:       line[c.hashLen+2:],
-	}
-	hash, err := hex.DecodeString(info.HashString)
-	if err != nil {
-		return CheckFileInfo{}, fmt.Errorf("hex.DecodeString: %w", err)
-	}
-	info.Hash = hash
-	return info, nil
-}
-func (c Crawler) readCheckFile(checkFilePath string) (map[string]CheckFileInfo, error) {
-	data, err := utils.ReadAllFile(checkFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("Crawler.readCheckFile(%s): %w", checkFilePath, err)
-	}
-
-	lines := strings.Split(string(data), "\n")
-	res := make(map[string]CheckFileInfo, len(lines))
-	// res := make([]CheckFileInfo, 0, len(lines))
-	for i, line := range lines {
-		if len(line) == 0 {
-			continue
-		}
-		info, err := c.splitChecksumFileLine(line)
-		if err != nil {
-			return nil, fmt.Errorf("Crawler.readCheckFile(%s) line %d %w", checkFilePath, i, err)
-		}
-		res[info.Name] = info
-	}
-
-	return res, nil
 }

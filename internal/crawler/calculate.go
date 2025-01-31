@@ -1,17 +1,16 @@
 package crawler
 
 import (
-	"encoding/hex"
 	"fmt"
 	"log"
 	"log/slog"
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"sync"
 	"time"
 
+	"github.com/HardDie/ghashdeep/internal/entities/checkfile"
 	"github.com/HardDie/ghashdeep/internal/utils"
 )
 
@@ -76,26 +75,6 @@ func (c Crawler) calculateFile(calculateFilePath string) ([]byte, error) {
 
 	return hash, nil
 }
-func (c Crawler) writeCheckFile(checkFilePath string, info []CheckFileInfo) error {
-	f, err := os.Create(checkFilePath)
-	if err != nil {
-		return fmt.Errorf("Crawler.writeCheckFile(%s) os.Create: %w", checkFilePath, err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			log.Printf("Crawler.writeCheckFile(%s) f.Close: %v", checkFilePath, e.Error())
-		}
-	}()
-
-	for _, fileInfo := range info {
-		_, err = f.WriteString(fileInfo.HashString + "  " + fileInfo.Name + "\n")
-		if err != nil {
-			return fmt.Errorf("Crawler.writeCheckFile(%s) f.WriteString: %w", checkFilePath, err)
-		}
-	}
-
-	return nil
-}
 func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []string) error {
 	onlyPath := filepath.Dir(checkPath)
 	onlyDir := filepath.Base(checkPath)
@@ -109,7 +88,7 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 
 	pr := utils.NewProcessing()
 
-	info := make([]CheckFileInfo, 0, len(filesForCalculate))
+	check := checkfile.New(len(filesForCalculate))
 	for _, fileName := range filesForCalculate {
 		// Build full path to required file
 		fullFilePath := path.Join(checkPath, fileName)
@@ -123,7 +102,7 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 
 			fileHash, err := c.calculateFile(fullFilePath)
 			if err != nil {
-				return fmt.Errorf("Crawler.calculateIterateFiles: %w", err)
+				return fmt.Errorf("c.calculateFile: %w", err)
 			}
 			if Verbose {
 				hashFinish = time.Now()
@@ -135,31 +114,24 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 			}
 
 			m.Lock()
-			info = append(info, CheckFileInfo{
-				Name:       fileName,
-				Hash:       fileHash,
-				HashString: hex.EncodeToString(fileHash),
-			})
+			check.Add(fileName, fileHash)
 			m.Unlock()
 			return nil
 		})
 	}
 	err := pr.Run()
 	if err != nil {
-		return fmt.Errorf("Crawler.calculateIterateFiles() pr.Run: %w", err)
+		return fmt.Errorf("pr.Run: %w", err)
 	}
 	finishedAt := time.Now()
 
-	if len(info) > 0 {
-		sort.SliceStable(info, func(i, j int) bool {
-			return info[i].Name < info[j].Name
-		})
-
+	if check.Len() > 0 {
 		checkFilePath := path.Join(checkPath, c.checkFileName)
-		err = c.writeCheckFile(checkFilePath, info)
+		err = check.SaveToFile(checkFilePath)
 		if err != nil {
-			return fmt.Errorf("Crawler.calculateIterateFiles(%s): %w", checkPath, err)
+			return fmt.Errorf("check.SaveToFile: %w", err)
 		}
+
 		c.logger.Info(
 			"Calculated!",
 			slog.String(LogValuePath, onlyPath),
