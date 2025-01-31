@@ -1,7 +1,6 @@
 package checkfile
 
 import (
-	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -10,11 +9,6 @@ import (
 
 	"github.com/HardDie/ghashdeep/internal/utils"
 )
-
-type Object struct {
-	Name string
-	Hash []byte
-}
 
 type CheckFile struct {
 	Files map[string]Object
@@ -42,16 +36,12 @@ func NewFromFile(path string, hashLen int) (*CheckFile, error) {
 		if len(line) < hashLen+3 {
 			return nil, fmt.Errorf("(%q) invalid length", line)
 		}
-		hashString := line[:hashLen]
-		name := line[hashLen+2:]
-		hash, err := hex.DecodeString(hashString)
+
+		obj, err := NewObjectFromString(line, hashLen)
 		if err != nil {
-			return nil, fmt.Errorf("hex.DecodeString(%s): %w", hashString, err)
+			return nil, fmt.Errorf("NewObjectFromString: %w", err)
 		}
-		res[name] = Object{
-			Name: name,
-			Hash: hash,
-		}
+		res[obj.Name] = obj
 	}
 
 	return &CheckFile{
@@ -86,7 +76,7 @@ func (c CheckFile) SaveToFile(path string) error {
 	})
 
 	for _, fileInfo := range info {
-		_, err = f.WriteString(hex.EncodeToString(fileInfo.Hash) + "  " + fileInfo.Name + "\n")
+		_, err = f.WriteString(fileInfo.String() + "\n")
 		if err != nil {
 			return fmt.Errorf("file: %s f.WriteString: %w", path, err)
 		}
