@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HardDie/ghashdeep/internal/logger"
 	"github.com/HardDie/ghashdeep/internal/utils"
 )
 
@@ -112,10 +111,10 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	}
 
 	if !isCheckFileExist {
-		logger.Error(
+		c.logger.Error(
 			"no checksum",
-			slog.String(logger.LogValueStatus, "BAD"),
-			slog.String(logger.LogValuePath, checkPath),
+			slog.String(LogValueStatus, "BAD"),
+			slog.String(LogValuePath, checkPath),
 		)
 		return ErrChecksumNotFound
 	}
@@ -162,10 +161,10 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 			}
 			if Verbose {
 				hashFinish = time.Now()
-				logger.Debug(
+				c.logger.Debug(
 					"stream hash calculation",
-					slog.String(logger.LogValueFile, fileName),
-					slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+					slog.String(LogValueFile, fileName),
+					slog.String(LogValueDuration, hashFinish.Sub(hashStart).String()),
 				)
 			}
 			if !isValid {
@@ -186,47 +185,47 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	if len(badFiles) > 0 ||
 		len(notFound) > 0 ||
 		len(info) > 0 {
-		logger.Error(
+		c.logger.Error(
 			"folder have errors",
-			slog.String(logger.LogValueStatus, "BAD"),
-			slog.String(logger.LogValuePath, onlyPath),
-			slog.String(logger.LogValueFolder, onlyDir),
-			// slog.String(logger.LogValueStartedAt, startedAt.String()),
-			// slog.String(logger.LogValueFinishedAt, finishedAt.String()),
-			slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+			slog.String(LogValueStatus, "BAD"),
+			slog.String(LogValuePath, onlyPath),
+			slog.String(LogValueFolder, onlyDir),
+			// slog.String(LogValueStartedAt, startedAt.String()),
+			// slog.String(LogValueFinishedAt, finishedAt.String()),
+			slog.String(LogValueDuration, finishedAt.Sub(startedAt).String()),
 		)
 		for _, badFile := range notFound {
-			logger.Error(
+			c.logger.Error(
 				"no checksum",
-				slog.String(logger.LogValueStatus, "BAD"),
-				slog.String(logger.LogValueFile, badFile),
+				slog.String(LogValueStatus, "BAD"),
+				slog.String(LogValueFile, badFile),
 			)
 		}
 		for _, badFile := range badFiles {
-			logger.Error(
+			c.logger.Error(
 				"bad checksum",
-				slog.String(logger.LogValueStatus, "BAD"),
-				slog.String(logger.LogValueFile, badFile),
+				slog.String(LogValueStatus, "BAD"),
+				slog.String(LogValueFile, badFile),
 			)
 		}
 		for _, fileInfo := range info {
-			logger.Error(
+			c.logger.Error(
 				"not found",
-				slog.String(logger.LogValueStatus, "BAD"),
-				slog.String(logger.LogValueFile, fileInfo.Name),
+				slog.String(LogValueStatus, "BAD"),
+				slog.String(LogValueFile, fileInfo.Name),
 			)
 		}
 		return ErrHaveInvalidFiles
 	}
 
-	logger.Info(
+	c.logger.Info(
 		"Success",
-		slog.String(logger.LogValueStatus, "GOOD"),
-		slog.String(logger.LogValuePath, onlyPath),
-		slog.String(logger.LogValueFolder, onlyDir),
-		// slog.String(logger.LogValueStartedAt, startedAt.String()),
-		// slog.String(logger.LogValueFinishedAt, finishedAt.String()),
-		slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+		slog.String(LogValueStatus, "GOOD"),
+		slog.String(LogValuePath, onlyPath),
+		slog.String(LogValueFolder, onlyDir),
+		// slog.String(LogValueStartedAt, startedAt.String()),
+		// slog.String(LogValueFinishedAt, finishedAt.String()),
+		slog.String(LogValueDuration, finishedAt.Sub(startedAt).String()),
 	)
 
 	return nil

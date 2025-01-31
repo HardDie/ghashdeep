@@ -20,15 +20,17 @@ var calculateCmd = &cobra.Command{
 	Use:   "calculate",
 	Short: "Recursive hash calculation for all files",
 	Run: func(cmd *cobra.Command, args []string) {
+		slogger := logger.New()
+
 		hash, err := chooseHashAlgCmd(cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
-		logger.Info("Hash algorithm: " + hash.Name())
+		slogger.Info("Hash algorithm: " + hash.Name())
 
 		cfg := getConfig(cmd)
 		if cfg.Verbose {
-			logger.Debug(fmt.Sprintf("Config: %+v", cfg))
+			slogger.Debug(fmt.Sprintf("Config: %+v", cfg))
 		}
 
 		// listen app termination signals.
@@ -41,7 +43,7 @@ var calculateCmd = &cobra.Command{
 		// signal handler.
 		g.Add(func() error {
 			sig := <-signalChan
-			logger.Info(
+			slogger.Info(
 				"signal",
 				slog.String(logger.LogValueSignal, sig.String()),
 			)
@@ -69,7 +71,7 @@ var calculateCmd = &cobra.Command{
 			}
 
 			err = crawler.
-				New(hash, cfg).
+				New(hash, cfg, slogger).
 				Calculate(rootDir)
 			if err != nil {
 				return fmt.Errorf("calculate: %w", err)
@@ -82,12 +84,12 @@ var calculateCmd = &cobra.Command{
 		})
 
 		if err := g.Run(); err != nil {
-			logger.Info(
+			slogger.Info(
 				"application stopped due to",
 				slog.String("reason", err.Error()),
 			)
 		} else {
-			logger.Info(
+			slogger.Info(
 				"application stopped",
 			)
 		}
@@ -96,14 +98,4 @@ var calculateCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(calculateCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// calculateCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// calculateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

@@ -20,15 +20,17 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Recursive search for checksum.* files and checksum verification",
 	Run: func(cmd *cobra.Command, args []string) {
+		slogger := logger.New()
+
 		hash, err := chooseHashAlgCmd(cmd)
 		if err != nil {
 			log.Fatal(err)
 		}
-		logger.Info("Hash algorithm: " + hash.Name())
+		slogger.Info("Hash algorithm: " + hash.Name())
 
 		cfg := getConfig(cmd)
 		if cfg.Verbose {
-			logger.Debug(fmt.Sprintf("Config: %+v", cfg))
+			slogger.Debug(fmt.Sprintf("Config: %+v", cfg))
 		}
 
 		// listen app termination signals.
@@ -41,7 +43,7 @@ var checkCmd = &cobra.Command{
 		// signal handler.
 		g.Add(func() error {
 			sig := <-signalChan
-			logger.Info(
+			slogger.Info(
 				"signal",
 				slog.String(logger.LogValueSignal, sig.String()),
 			)
@@ -57,7 +59,7 @@ var checkCmd = &cobra.Command{
 			}
 
 			err = crawler.
-				New(hash, cfg).
+				New(hash, cfg, slogger).
 				Check(rootDir)
 			if err != nil {
 				return fmt.Errorf("check: %w", err)
@@ -68,12 +70,12 @@ var checkCmd = &cobra.Command{
 		})
 
 		if err := g.Run(); err != nil {
-			logger.Info(
+			slogger.Info(
 				"application stopped due to",
 				slog.String("reason", err.Error()),
 			)
 		} else {
-			logger.Info(
+			slogger.Info(
 				"application stopped",
 			)
 		}

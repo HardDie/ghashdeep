@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/HardDie/ghashdeep/internal/entities/config"
 	"github.com/HardDie/ghashdeep/internal/validators/blake3"
 	"github.com/HardDie/ghashdeep/internal/validators/md5"
 	"github.com/HardDie/ghashdeep/internal/validators/sha1"
@@ -18,7 +19,6 @@ import (
 	"github.com/HardDie/ghashdeep/internal/validators/sha384"
 	"github.com/HardDie/ghashdeep/internal/validators/sha512"
 	"github.com/HardDie/ghashdeep/internal/validators/xxhash"
-	"github.com/HardDie/ghashdeep/internal/entities/config"
 )
 
 var (
@@ -42,16 +42,18 @@ type Crawler struct {
 	checkFileName string
 	hashLen       int
 
-	cfg config.Config
+	cfg    config.Config
+	logger Logger
 }
 
-func New(hash HashMethod, cfg config.Config) *Crawler {
+func New(hash HashMethod, cfg config.Config, logger Logger) *Crawler {
 	return &Crawler{
 		hash:          hash,
 		checkFileName: "checksum." + hash.Name(),
 		hashLen:       calcHashLen(hash),
 
-		cfg: cfg,
+		cfg:    cfg,
+		logger: logger,
 	}
 }
 

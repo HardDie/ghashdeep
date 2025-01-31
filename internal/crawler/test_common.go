@@ -3,6 +3,8 @@ package crawler
 import (
 	"bytes"
 	"encoding/hex"
+	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path"
@@ -49,9 +51,10 @@ func AppCalculateHashString(t *testing.T, hashAlg string, data []byte) string {
 
 func AppCalculateHash(t *testing.T, hashAlg, dir string) {
 	t.Helper()
+
 	hash := ChooseHashAlg(hashAlg)
 	require.NotNil(t, hash, "error hash not found")
-	err := New(hash, config.Config{}).Calculate(dir)
+	err := New(hash, config.Config{}, slog.New(slog.NewTextHandler(io.Discard, nil))).Calculate(dir)
 	require.NoError(t, err, "error calculating hash")
 }
 
@@ -59,7 +62,7 @@ func AppCheckHash(t *testing.T, hashAlg, dir string) {
 	t.Helper()
 	hash := ChooseHashAlg(hashAlg)
 	require.NotNil(t, hash, "error hash not found")
-	err := New(hash, config.Config{}).Check(dir)
+	err := New(hash, config.Config{}, slog.New(slog.NewTextHandler(io.Discard, nil))).Check(dir)
 	require.NoError(t, err, "error checking hash")
 }
 

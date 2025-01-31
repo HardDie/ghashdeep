@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HardDie/ghashdeep/internal/logger"
 	"github.com/HardDie/ghashdeep/internal/utils"
 )
 
@@ -128,10 +127,10 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 			}
 			if Verbose {
 				hashFinish = time.Now()
-				logger.Debug(
+				c.logger.Debug(
 					"stream hash calculation",
-					slog.String(logger.LogValueFile, fileName),
-					slog.String(logger.LogValueDuration, hashFinish.Sub(hashStart).String()),
+					slog.String(LogValueFile, fileName),
+					slog.String(LogValueDuration, hashFinish.Sub(hashStart).String()),
 				)
 			}
 
@@ -161,11 +160,11 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 		if err != nil {
 			return fmt.Errorf("Crawler.calculateIterateFiles(%s): %w", checkPath, err)
 		}
-		logger.Info(
+		c.logger.Info(
 			"Calculated!",
-			slog.String(logger.LogValuePath, onlyPath),
-			slog.String(logger.LogValueFolder, onlyDir),
-			slog.String(logger.LogValueDuration, finishedAt.Sub(startedAt).String()),
+			slog.String(LogValuePath, onlyPath),
+			slog.String(LogValueFolder, onlyDir),
+			slog.String(LogValueDuration, finishedAt.Sub(startedAt).String()),
 		)
 	}
 
