@@ -7,8 +7,7 @@ import (
 	"github.com/zeebo/blake3"
 )
 
-type Validator struct {
-}
+type Validator struct{}
 
 func New() Validator {
 	h := Validator{}

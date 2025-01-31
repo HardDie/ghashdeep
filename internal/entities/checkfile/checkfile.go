@@ -19,6 +19,7 @@ func New(size int) *CheckFile {
 		Files: make(map[string]Object, size),
 	}
 }
+
 func NewFromFile(path string, hashLen int) (*CheckFile, error) {
 	data, err := utils.ReadAllFile(path)
 	if err != nil {
@@ -29,7 +30,7 @@ func NewFromFile(path string, hashLen int) (*CheckFile, error) {
 	res := make(map[string]Object, len(lines))
 
 	for _, line := range lines {
-		if len(line) == 0 {
+		if line == "" {
 			continue
 		}
 		// two spaces and at least one name symbol
@@ -52,10 +53,12 @@ func NewFromFile(path string, hashLen int) (*CheckFile, error) {
 func (c CheckFile) Len() int {
 	return len(c.Files)
 }
+
 func (c CheckFile) IsFileExist(name string) (Object, bool) {
 	obj, ok := c.Files[name]
 	return obj, ok
 }
+
 func (c CheckFile) SaveToFile(path string) error {
 	f, err := os.Create(path)
 	if err != nil {
@@ -84,9 +87,11 @@ func (c CheckFile) SaveToFile(path string) error {
 
 	return nil
 }
+
 func (c *CheckFile) Delete(name string) {
 	delete(c.Files, name)
 }
+
 func (c *CheckFile) Add(name string, hash []byte) {
 	c.Files[name] = Object{
 		Name: name,

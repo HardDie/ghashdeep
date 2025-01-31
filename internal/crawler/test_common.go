@@ -85,7 +85,7 @@ func CmdCalculateHash(t *testing.T, appName, hashAlg, dir string) {
 
 	files, err := os.ReadDir(dir)
 	require.NoErrorf(t, err, "error reading directory: %s", dir)
-	var filesForHash []string
+	filesForHash := make([]string, 0, len(files))
 	for _, f := range files {
 		if f.IsDir() {
 			continue

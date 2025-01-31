@@ -26,7 +26,10 @@ func Execute(v string) {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringP("algorithm", "a", "md5", "The hashing algorithm you prefer to use. Possible algorithms: md5, sha1, sha224, sha256, sha384, sha512, xxhash, blake3")
+	rootCmd.PersistentFlags().StringP(
+		"algorithm", "a", "md5",
+		"The hashing algorithm you prefer to use. Possible algorithms: md5, sha1, sha224, sha256, sha384, sha512, xxhash, blake3",
+	)
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose progress printing")
 }
 

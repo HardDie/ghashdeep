@@ -50,13 +50,15 @@ func (c Crawler) calculateIterate(checkPath string) error {
 			continue
 		}
 
-		if err = c.calculateIterate(path.Join(checkPath, dir.Name())); err != nil {
-			return nil
+		err = c.calculateIterate(path.Join(checkPath, dir.Name()))
+		if err != nil {
+			return fmt.Errorf("calculateIterate: %w", err)
 		}
 	}
 
 	return nil
 }
+
 func (c Crawler) calculateFile(calculateFilePath string) ([]byte, error) {
 	f, err := os.Open(calculateFilePath)
 	if err != nil {
@@ -75,6 +77,7 @@ func (c Crawler) calculateFile(calculateFilePath string) ([]byte, error) {
 
 	return hash, nil
 }
+
 func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []string) error {
 	onlyPath := filepath.Dir(checkPath)
 	onlyDir := filepath.Base(checkPath)

@@ -19,7 +19,7 @@ import (
 var calculateCmd = &cobra.Command{
 	Use:   "calculate",
 	Short: "Recursive hash calculation for all files",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		slogger := logger.New()
 
 		hash, err := chooseHashAlgCmd(cmd)
@@ -62,7 +62,7 @@ var calculateCmd = &cobra.Command{
 				log.Fatalf("fmt.Scanf: %v", err)
 			}
 			if answer != "YES" {
-				return fmt.Errorf("Operation has been declined!")
+				return fmt.Errorf("operation has been declined")
 			}
 
 			rootDir, err := os.Getwd()
@@ -79,7 +79,7 @@ var calculateCmd = &cobra.Command{
 
 			fmt.Println("All checksums has been calculated!")
 			return nil
-		}, func(err error) {
+		}, func(_ error) {
 			os.Exit(0)
 		})
 

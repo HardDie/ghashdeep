@@ -6,8 +6,7 @@ import (
 	"io"
 )
 
-type Validator struct {
-}
+type Validator struct{}
 
 func New() Validator {
 	h := Validator{}

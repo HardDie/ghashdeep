@@ -23,3 +23,20 @@ update-deps: ## update dependency libraries
 		github.com/stretchr/testify \
 		github.com/zeebo/blake3
 	go mod tidy
+
+.PHONY: lint
+lint: ## run linter
+	golangci-lint run --out-format=tab
+
+.PHONY: format
+format: ## autoformat code
+	go fmt ./...
+	gci write -s standard -s default -s 'prefix(github.com/HardDie)' -s localmodule --skip-generated .
+	gofumpt -l -w .
+
+LINTER_VERSION=1.63.4
+.PHONY: install-tools
+install-tools: ## install additional tools
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v$(LINTER_VERSION)
+	go install github.com/daixiang0/gci@latest
+	go install mvdan.cc/gofumpt@latest

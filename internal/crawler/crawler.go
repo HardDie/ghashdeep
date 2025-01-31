@@ -89,7 +89,7 @@ func (c Crawler) readFiles(checkPath string) ([]os.FileInfo, []os.FileInfo, erro
 		return nil, nil, fmt.Errorf("Crawler.readFiles(%s) f.Readdir: %w", checkPath, err)
 	}
 
-	var resFiles []os.FileInfo
+	resFiles := make([]os.FileInfo, 0, len(files))
 	var resDirs []os.FileInfo
 
 	for _, file := range files {

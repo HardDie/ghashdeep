@@ -9,8 +9,8 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Version of app",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(Version)
+	Run: func(_ *cobra.Command, _ []string) {
+		_, _ = fmt.Println(Version)
 	},
 }
 

@@ -79,6 +79,7 @@ func (c Crawler) checkIterate(checkPath string) error {
 	}
 	return nil
 }
+
 func (c Crawler) validateFile(checkFilePath string, hash []byte) (bool, error) {
 	f, err := os.Open(checkFilePath)
 	if err != nil {
@@ -97,6 +98,7 @@ func (c Crawler) validateFile(checkFilePath string, hash []byte) (bool, error) {
 
 	return isValid, nil
 }
+
 func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, filesForCheck []string) error {
 	onlyPath := filepath.Dir(checkPath)
 	onlyDir := filepath.Base(checkPath)

@@ -19,7 +19,7 @@ import (
 var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Recursive search for checksum.* files and checksum verification",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		slogger := logger.New()
 
 		hash, err := chooseHashAlgCmd(cmd)
@@ -65,7 +65,7 @@ var checkCmd = &cobra.Command{
 				return fmt.Errorf("check: %w", err)
 			}
 			return nil
-		}, func(err error) {
+		}, func(_ error) {
 			os.Exit(0)
 		})
 

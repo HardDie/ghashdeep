@@ -7,8 +7,7 @@ import (
 	"github.com/cespare/xxhash"
 )
 
-type Validator struct {
-}
+type Validator struct{}
 
 func New() Validator {
 	h := Validator{}
