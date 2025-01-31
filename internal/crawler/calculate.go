@@ -96,7 +96,7 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 		pr.Push(fileName, func(m *sync.Mutex) error {
 			// Track time calculation of hash sum for selected file
 			var hashStart, hashFinish time.Time
-			if Verbose {
+			if c.cfg.Verbose {
 				hashStart = time.Now()
 			}
 
@@ -104,7 +104,7 @@ func (c Crawler) calculateIterateFiles(checkPath string, filesForCalculate []str
 			if err != nil {
 				return fmt.Errorf("c.calculateFile: %w", err)
 			}
-			if Verbose {
+			if c.cfg.Verbose {
 				hashFinish = time.Now()
 				c.logger.Debug(
 					"stream hash calculation",

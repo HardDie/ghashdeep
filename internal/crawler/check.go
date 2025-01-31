@@ -15,10 +15,6 @@ import (
 	"github.com/HardDie/ghashdeep/internal/utils"
 )
 
-const (
-	Verbose = false
-)
-
 func (c Crawler) Check(checkPath string) error {
 	err := c.checkIterate(checkPath)
 	if err != nil {
@@ -150,7 +146,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 		pr.Push(fileName, func(m *sync.Mutex) error {
 			// Track time calculation of hash sum for selected file
 			var hashStart, hashFinish time.Time
-			if Verbose {
+			if c.cfg.Verbose {
 				hashStart = time.Now()
 			}
 
@@ -158,7 +154,7 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 			if err != nil {
 				return fmt.Errorf("Crawler.checkIterateFiles: %w", err)
 			}
-			if Verbose {
+			if c.cfg.Verbose {
 				hashFinish = time.Now()
 				c.logger.Debug(
 					"stream hash calculation",
@@ -184,15 +180,21 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 	if len(badFiles) > 0 ||
 		len(notFound) > 0 ||
 		check.Len() > 0 {
-		c.logger.Error(
-			"folder have errors",
+
+		logFields := []any{
 			slog.String(LogValueStatus, "BAD"),
 			slog.String(LogValuePath, onlyPath),
 			slog.String(LogValueFolder, onlyDir),
-			// slog.String(LogValueStartedAt, startedAt.String()),
-			// slog.String(LogValueFinishedAt, finishedAt.String()),
 			slog.String(LogValueDuration, finishedAt.Sub(startedAt).String()),
-		)
+		}
+		if c.cfg.Verbose {
+			logFields = append(
+				logFields,
+				slog.String(LogValueStartedAt, startedAt.String()),
+				slog.String(LogValueFinishedAt, finishedAt.String()),
+			)
+		}
+		c.logger.Error("folder have errors", logFields...)
 		for _, badFile := range notFound {
 			c.logger.Error(
 				"no checksum",
@@ -217,15 +219,20 @@ func (c Crawler) checkIterateFiles(checkPath string, isCheckFileExist bool, file
 		return ErrHaveInvalidFiles
 	}
 
-	c.logger.Info(
-		"Success",
+	logFields := []any{
 		slog.String(LogValueStatus, "GOOD"),
 		slog.String(LogValuePath, onlyPath),
 		slog.String(LogValueFolder, onlyDir),
-		// slog.String(LogValueStartedAt, startedAt.String()),
-		// slog.String(LogValueFinishedAt, finishedAt.String()),
 		slog.String(LogValueDuration, finishedAt.Sub(startedAt).String()),
-	)
+	}
+	if c.cfg.Verbose {
+		logFields = append(
+			logFields,
+			slog.String(LogValueStartedAt, startedAt.String()),
+			slog.String(LogValueFinishedAt, finishedAt.String()),
+		)
+	}
+	c.logger.Info("Success", logFields...)
 
 	return nil
 }
